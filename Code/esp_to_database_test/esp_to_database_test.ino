@@ -13,13 +13,13 @@
 
 // Insert your network credentials
 #define WIFI_SSID "living"
-#define WIFI_PASSWORD "deranke68"
+#define WIFI_PASSWORD "THIS IS WHERE THE WIFI PASSWORD GOES, FOR OBVIOUS REASONS I HAVE NOT INCLUDED IT HERE"
 
 // Insert Firebase project API Key
-#define API_KEY "AIzaSyCWSBStmBWQA8IzZtEyxeb2tco0xXVhpsg"
+#define API_KEY "THIS IS WHERE THE API KEY GOES, FOR OBVIOUS REASONS I HAVE NOT INCLUDED IT HERE"
 
 // Insert RTDB URLefine the RTDB URL */
-#define DATABASE_URL "https://project-katara-default-rtdb.europe-west1.firebasedatabase.app"
+#define DATABASE_URL "THIS IS WHERE THE DATA BASE URL GOES, FOR OBVIOUS REASONS I HAVE NOT INCLUDED IT HERE"
 
 //Define Firebase Data object
 FirebaseData fbdo;
