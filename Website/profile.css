@@ -1,0 +1,46 @@
+/* profile.css */
+
+/* Login Section */
+.login-section {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #c9bfa6;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.login-section h2 {
+    margin-bottom: 20px;
+}
+
+.login-form .form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.login-form label {
+    display: block;
+    margin-bottom: 5px;
+    color: #145105;
+}
+
+.login-form input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #145105;
+    border-radius: 5px;
+}
+
+.btn-login {
+    background-color: #145105;
+    color: #eeebe3;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-login:hover {
+    background-color: #0e3d03;
+}

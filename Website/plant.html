@@ -1,0 +1,112 @@
+<!-- plant.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Plant Details</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="plant.css">
+    <!-- Include Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav>
+        <ul class="nav-left">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="profile.html">Profile</a></li>
+        </ul>
+        <ul class="nav-right">
+            <li><a href="profile.html" class="login-button">Login</a></li>
+        </ul>
+    </nav>
+
+    <!-- Plant Details -->
+    <main>
+        <section class="plant-details">
+            <div class="plant-header">
+                <h1 id="plant-name-heading">Plant Name</h1>
+                <!-- Settings Icon -->
+                <div class="settings-icon" id="settings-icon">
+                    <img src="assets/icons/settings.png" alt="Settings Icon">
+                </div>
+                <!-- Settings Menu -->
+                <div class="settings-menu" id="settings-menu">
+                    <ul>
+                        <li id="rename-plant-option">Rename Plant</li>
+                        <li id="delete-plant-option">Delete Plant</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="image-container">
+                <!-- Delete Image Icon -->
+                <div class="delete-image-icon" id="delete-image-icon">
+                    <img src="assets/icons/delete.png" alt="Delete Image Icon">
+                </div>
+                <!-- Plant Image -->
+                <img src="default_plant.png" alt="Plant Image" id="plant-image">
+                <!-- Edit Image Icon -->
+                <div class="edit-icon" id="edit-icon">
+                    <img src="assets/icons/edit.png" alt="Edit Icon">
+                </div>
+                <!-- Hidden File Input -->
+                <input type="file" id="image-upload" accept="image/*" style="display: none;">
+            </div>
+
+            <!-- Growth Stage Selection -->
+            <div class="growth-stage-container">
+                <label for="growth-stage-select">Growth Stage:</label>
+                <select id="growth-stage-select">
+                    <option value="Sprout">Sprout</option>
+                    <option value="Seedling">Seedling</option>
+                    <option value="Vegetative">Vegetative</option>
+                    <option value="Budding">Budding</option>
+                    <option value="Flowering">Flowering</option>
+                    <option value="Ripening">Ripening</option>
+                </select>
+            </div>
+
+            <div class="plant-info">
+                <p><strong>Temperature:</strong> 25°C</p>
+                <p><strong>Moisture:</strong> 60%</p>
+                <p><strong>Soil Ion Percentage:</strong> 30%</p>
+            </div>
+            <!-- Plant Graphs -->
+            <div class="plant-graphs">
+                <!-- Moisture Graph -->
+                <div class="graph-container">
+                    <h2>Moisture</h2>
+                    <canvas id="moistureChart"></canvas>
+                </div>
+                <!-- Temperature Graph -->
+                <div class="graph-container">
+                    <h2>Temperature</h2>
+                    <canvas id="temperatureChart"></canvas>
+                </div>
+                <!-- Electrical Conductivity Graph -->
+                <div class="graph-container">
+                    <h2>Electrical Conductivity</h2>
+                    <canvas id="conductivityChart"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Edit Plant Name Modal -->
+    <div class="modal" id="edit-plant-name-modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-name-modal">&times;</span>
+            <h2>Edit Plant Name</h2>
+            <form id="edit-plant-name-form">
+                <div class="form-group">
+                    <label for="new-plant-name">New Plant Name:</label>
+                    <input type="text" id="new-plant-name" name="new-plant-name" required>
+                </div>
+                <button type="submit" class="btn-add-plant">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

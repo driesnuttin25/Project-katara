@@ -1,0 +1,91 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Plant Monitoring System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav>
+        <ul class="nav-left">
+            <li><a href="index.html" class="active">Home</a></li>
+            <li><a href="profile.html">Profile</a></li>
+        </ul>
+        <ul class="nav-right">
+            <li><a href="profile.html" class="login-button">Login</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <div class="plant-grid" id="plant-grid">
+            <!-- Plant squares will be dynamically generated here -->
+        </div>
+    </main>
+
+    <!-- Add Plant Modal -->
+    <div class="modal" id="add-plant-modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-modal">&times;</span>
+            <h2>Add New Plant</h2>
+            <form id="add-plant-form">
+                <div class="form-group">
+                    <label for="plant-type">Plant Type:</label>
+                    <select id="plant-type" name="plant-type" required>
+                        <option value="Basil">Basil Plant</option>
+                        <option value="Mint">Pepper Plant</option>
+                        <option value="Parsley">Parsley Plant</option>
+                        <option value="Thyme">Thyme Plant</option>
+                        <option value="Chives">Chives Plant</option>
+                        <option value="Oregano">Oregano Plant</option>
+                        <option value="Spinach">Spinach Plant</option>
+                        <option value="Lettuce">Lettuce Plant</option>
+                        <option value="Cilantro">Cilantro Plant</option>
+                        <option value="Rosemary">Rosemary Plant</option>
+                        <option value="Cherry Tomatoes">Cherry Plant</option>
+                        <option value="Strawberries">Strawberries Plant</option>
+                        <option value="Peppers">Peppers Plant</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="plant-name">Plant Name:</label>
+                    <input type="text" id="plant-name" name="plant-name" placeholder="Enter plant name" required>
+                </div>
+                <div class="form-group">
+                    <label for="watering-option">Watering Option:</label>
+                    <select id="watering-option" name="watering-option" required>
+                        <option value="autonomous">Autonomous</option>
+                        <option value="manual">Self Configured</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-add-plant">Add Plant</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <section class="about-section">
+        <h2>About Our Plant Monitoring System</h2>
+        <div class="about-text">
+            <p>
+                Welcome to Project Katara! This innovative platform allows you to keep track of your plants' health remotely. Using advanced sensors and data analytics, we provide real-time updates on your plant's temperature, moisture levels, and soil ion percentages.
+            </p>
+            <p>
+                Our system is designed to make plant care easy and accessible. Whether you're a seasoned gardener or just starting out, our tools can help you maintain the perfect environment for your plants.
+            </p>
+            <p>
+                This project was designed by me, Dries Nuttin. It was designed for a school project that turned out to take a lot longer than I had anticipated. But hey, now we're here.
+            </p>
+        </div>
+        <div class="pcb-image-container">
+            <img src="assets/images/pcb.png" alt="PCB Image" class="pcb-image">
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>
