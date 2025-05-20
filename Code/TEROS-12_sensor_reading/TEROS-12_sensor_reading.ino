@@ -1,11 +1,18 @@
 #include <SDI12.h>
 
 #define SDI12_DATA_PIN 5  // Pin connected to the SDI-12 data line of the sensor
+#define MOSFET_CONTROL_PIN 26  // Pin connected to the MOSFET gate
+
 SDI12 mySDI12(SDI12_DATA_PIN);
 
 void setup() {
   Serial.begin(9600);  // Start serial communication at 9600 baud rate
-  mySDI12.begin();     // Begin SDI-12 communication
+
+  // Set up MOSFET control pin
+  pinMode(MOSFET_CONTROL_PIN, OUTPUT);  // Set GPIO26 as output
+  digitalWrite(MOSFET_CONTROL_PIN, HIGH);  // Set GPIO26 HIGH to power the sensor
+
+  mySDI12.begin();  // Begin SDI-12 communication
   Serial.println("SDI-12 sensor communication initialized");
 }
 
@@ -28,7 +35,7 @@ void loop() {
     Serial.println("No data received. Check sensor and command syntax.");
   }
 
-  delay(5000);  // Wait 5 seconds before the next loop iteration
+  delay(2000);  // Wait 5 seconds before the next loop iteration
 }
 
 String readFullResponse() {

@@ -1,4 +1,3 @@
-<!-- plant.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,6 +7,9 @@
     <link rel="stylesheet" href="plant.css">
     <!-- Include Chart.js Library -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Add Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js"></script>
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -24,89 +26,104 @@
     <!-- Plant Details -->
     <main>
         <section class="plant-details">
-            <div class="plant-header">
-                <h1 id="plant-name-heading">Plant Name</h1>
-                <!-- Settings Icon -->
-                <div class="settings-icon" id="settings-icon">
-                    <img src="assets/icons/settings.png" alt="Settings Icon">
+            <!-- Plant 1 Section -->
+            <div class="plant-section">
+                <div class="plant-header">
+                    <h1 id="plant-1-name">Plant 1</h1>
                 </div>
-                <!-- Settings Menu -->
-                <div class="settings-menu" id="settings-menu">
-                    <ul>
-                        <li id="rename-plant-option">Rename Plant</li>
-                        <li id="delete-plant-option">Delete Plant</li>
-                    </ul>
+                <div class="image-container">
+                    <img src="default_plant.png" alt="Plant 1 Image" id="plant-1-image">
                 </div>
-            </div>
-            <div class="image-container">
-                <!-- Delete Image Icon -->
-                <div class="delete-image-icon" id="delete-image-icon">
-                    <img src="assets/icons/delete.png" alt="Delete Image Icon">
+                <div class="plant-info">
+                    <p><strong>Temperature:</strong> <span id="plant-1-temperature">Loading...</span> °C</p>
+                    <p><strong>Moisture:</strong> <span id="plant-1-moisture">Loading...</span> %</p>
+                    <p><strong>Soil Ion Percentage:</strong> <span id="plant-1-ec">Loading...</span></p>
                 </div>
-                <!-- Plant Image -->
-                <img src="default_plant.png" alt="Plant Image" id="plant-image">
-                <!-- Edit Image Icon -->
-                <div class="edit-icon" id="edit-icon">
-                    <img src="assets/icons/edit.png" alt="Edit Icon">
+                <!-- Plant 1 Graphs -->
+                <div class="plant-graphs">
+                    <div class="graph-container">
+                        <h2>Moisture</h2>
+                        <canvas id="plant-1-moistureChart"></canvas>
+                    </div>
+                    <div class="graph-container">
+                        <h2>Temperature</h2>
+                        <canvas id="plant-1-temperatureChart"></canvas>
+                    </div>
+                    <div class="graph-container">
+                        <h2>Electrical Conductivity</h2>
+                        <canvas id="plant-1-ecChart"></canvas>
+                    </div>
                 </div>
-                <!-- Hidden File Input -->
-                <input type="file" id="image-upload" accept="image/*" style="display: none;">
             </div>
 
-            <!-- Growth Stage Selection -->
-            <div class="growth-stage-container">
-                <label for="growth-stage-select">Growth Stage:</label>
-                <select id="growth-stage-select">
-                    <option value="Sprout">Sprout</option>
-                    <option value="Seedling">Seedling</option>
-                    <option value="Vegetative">Vegetative</option>
-                    <option value="Budding">Budding</option>
-                    <option value="Flowering">Flowering</option>
-                    <option value="Ripening">Ripening</option>
-                </select>
-            </div>
-
-            <div class="plant-info">
-                <p><strong>Temperature:</strong> 25°C</p>
-                <p><strong>Moisture:</strong> 60%</p>
-                <p><strong>Soil Ion Percentage:</strong> 30%</p>
-            </div>
-            <!-- Plant Graphs -->
-            <div class="plant-graphs">
-                <!-- Moisture Graph -->
-                <div class="graph-container">
-                    <h2>Moisture</h2>
-                    <canvas id="moistureChart"></canvas>
-                </div>
-                <!-- Temperature Graph -->
-                <div class="graph-container">
-                    <h2>Temperature</h2>
-                    <canvas id="temperatureChart"></canvas>
-                </div>
-                <!-- Electrical Conductivity Graph -->
-                <div class="graph-container">
-                    <h2>Electrical Conductivity</h2>
-                    <canvas id="conductivityChart"></canvas>
-                </div>
-            </div>
+            <!-- Add similar sections for Plant 2, Plant 3, etc. -->
         </section>
     </main>
 
-    <!-- Edit Plant Name Modal -->
-    <div class="modal" id="edit-plant-name-modal">
-        <div class="modal-content">
-            <span class="close-button" id="close-name-modal">&times;</span>
-            <h2>Edit Plant Name</h2>
-            <form id="edit-plant-name-form">
-                <div class="form-group">
-                    <label for="new-plant-name">New Plant Name:</label>
-                    <input type="text" id="new-plant-name" name="new-plant-name" required>
-                </div>
-                <button type="submit" class="btn-add-plant">Save</button>
-            </form>
-        </div>
-    </div>
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+        apiKey: "AIzaSyCWSBStmBWQA8IzZtEyxeb2tco0xXVhpsg",
+        authDomain: "project-katara.firebaseapp.com",
+        databaseURL: "https://project-katara-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "project-katara",
+        storageBucket: "project-katara.firebasestorage.app",
+        messagingSenderId: "7288655338",
+        appId: "1:7288655338:web:06b74e8aa116e677a07693",
+        measurementId: "G-J465YLGVQ9"
+        };
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-    <script src="script.js"></script>
+        // Fetch data for Plant 1 from Firebase
+        const plant1Ref = database.ref("plant_1");
+
+        plant1Ref.on("value", (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                document.getElementById("plant-1-temperature").textContent = data.temperature;
+                document.getElementById("plant-1-moisture").textContent = data.moisture;
+                document.getElementById("plant-1-ec").textContent = data.electrical_conductivity;
+
+                // Update graphs dynamically
+                updateGraph("plant-1-moistureChart", "Moisture (%)", data.moisture, 'rgba(54, 162, 235, 1)');
+                updateGraph("plant-1-temperatureChart", "Temperature (°C)", data.temperature, 'rgba(255, 99, 132, 1)');
+                updateGraph("plant-1-ecChart", "Electrical Conductivity (µS/cm)", data.electrical_conductivity, 'rgba(75, 192, 192, 1)');
+            }
+        });
+
+        // Function to update the graphs dynamically
+        function updateGraph(chartId, label, value, color) {
+            const ctx = document.getElementById(chartId).getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array(24).fill("").map((_, i) => `${24 - i}h`),
+                    datasets: [
+                        {
+                            label: label,
+                            data: Array(24).fill(value),
+                            backgroundColor: color.replace('1)', '0.2)'),
+                            borderColor: color,
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: { enabled: true }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: "Hours Ago" } },
+                        y: { beginAtZero: true, title: { display: true, text: label } }
+                    }
+                }
+            });
+        }
+    </script>
 </body>
 </html>

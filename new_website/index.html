@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Plant Monitor Dashboard</title>
+  
+  <!-- Dark Green Theme -->
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background-color: #0D2B0F; /* Very dark green background */
+      color: #E5FCE7;           /* Light greenish text */
+    }
+
+    header {
+      text-align: center;
+      margin: 20px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    /* Main container as a two-column layout */
+    .container {
+      display: flex;
+      flex-wrap: wrap; 
+      margin: 20px;
+    }
+
+    /* Left column for settings + current data */
+    .left-col {
+      flex: 0 0 300px; /* fixed width for narrower screens, adjust as needed */
+      max-width: 400px;
+      margin-right: 20px;
+    }
+
+    /* Right column for stacked graphs */
+    .right-col {
+      flex: 1; /* fill remaining space */
+      min-width: 0;
+    }
+
+    .panel {
+      background-color: #173C18;  /* Slightly lighter green for containers */
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      margin-bottom: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: inline-block;
+      width: 150px;
+    }
+
+    input[type="number"], select {
+      padding: 5px;
+      border-radius: 4px;
+      border: 1px solid #555;
+      background-color: #0D2B0F;
+      color: #E5FCE7;
+    }
+
+    button {
+      background-color: #2E7D32;
+      color: #E5FCE7;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #388E3C;
+    }
+
+    /* Panel for the graphs */
+    .graphs canvas {
+      background-color: #fff; /* white background for the charts */
+      border-radius: 8px;
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 600px; /* set a max width so they don't blow out the layout */
+    }
+
+    /* Basic responsiveness for the forms */
+    @media (max-width: 768px) {
+      label {
+        display: block;
+        width: 100%;
+        margin-bottom: 5px;
+      }
+      .container {
+        flex-direction: column;
+      }
+      .left-col, .right-col {
+        max-width: 100%;
+        margin-right: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  
+  <header>
+    <h1>Plant Monitor Dashboard</h1>
+    <p>Device ID: <strong>test_plant</strong></p>
+  </header>
+
+  <div class="container">
+    <!-- Left Column: Settings + Current Data -->
+    <div class="left-col">
+      
+      <!-- Settings Panel -->
+      <div class="panel">
+        <h2>Device Settings</h2>
+        <div class="form-group">
+          <label for="desiredMoistureInput">Desired Moisture</label>
+          <input type="number" id="desiredMoistureInput" placeholder="e.g. 1500" />
+        </div>
+
+        <div class="form-group">
+          <label for="ledModeSelect">LED Mode</label>
+          <select id="ledModeSelect">
+            <option value="off">Off</option>
+            <option value="on">On</option>
+            <option value="auto">Auto (12h on/off)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="activeSelect">Active</label>
+          <select id="activeSelect">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+
+        <button id="updateSettingsBtn">Update Settings</button>
+      </div>
+
+      <!-- Current Data Panel -->
+      <div class="panel">
+        <h2>Current Data</h2>
+        <ul style="list-style-type: none; padding-left: 0;">
+          <li>Moisture: <span id="currentMoisture">-</span></li>
+          <li>Temperature: <span id="currentTemperature">-</span> °C</li>
+          <li>Conductivity: <span id="currentConductivity">-</span></li>
+        </ul>
+      </div>
+
+    </div> <!-- end left-col -->
+
+    <!-- Right Column: Graphs -->
+    <div class="right-col">
+      <div class="panel graphs">
+        <h2>Sensor Data Over Time</h2>
+        <canvas id="moistureChart" width="400" height="200"></canvas>
+        <canvas id="temperatureChart" width="400" height="200"></canvas>
+        <canvas id="conductivityChart" width="400" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1) Load Chart.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- 2) Load Moment.js + Chart.js adapter for Moment -->
+  <script src="https://cdn.jsdelivr.net/npm/moment@2.29.3/moment.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.0/dist/chartjs-adapter-moment.min.js"></script>
+
+  <!-- 3) Our custom script -->
+  <script type="module">
+    /**************************************************
+     * Import Firebase
+     **************************************************/
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
+    import { 
+      getFirestore, 
+      doc, getDoc, updateDoc,
+      onSnapshot, serverTimestamp
+    } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
+
+    /**************************************************
+     * 1) Firebase Config
+     **************************************************/
+    const firebaseConfig = {
+      apiKey: "AIzaSyCWSBStmBWQA8IzZtEyxeb2tco0xXVhpsg",
+      authDomain: "project-katara.firebaseapp.com",
+      databaseURL: "https://project-katara-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "project-katara",
+      storageBucket: "project-katara.firebasestorage.app",
+      messagingSenderId: "7288655338",
+      appId: "1:7288655338:web:06b74e8aa116e677a07693",
+      measurementId: "G-J465YLGVQ9"
+    };
+
+    // Initialize Firebase & Firestore
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Reference to the single doc /planters/test_plant
+    const planterDocRef = doc(db, "planters", "test_plant");
+
+    /**************************************************
+     * 2) HTML Elements
+     **************************************************/
+    const desiredMoistureInput = document.getElementById('desiredMoistureInput');
+    const ledModeSelect        = document.getElementById('ledModeSelect');
+    const activeSelect         = document.getElementById('activeSelect');
+    const updateSettingsBtn    = document.getElementById('updateSettingsBtn');
+
+    // Current data UI
+    const currentMoistureEl = document.getElementById('currentMoisture');
+    const currentTempEl     = document.getElementById('currentTemperature');
+    const currentCondEl     = document.getElementById('currentConductivity');
+
+    // Chart canvases
+    const moistureCanvas    = document.getElementById('moistureChart');
+    const temperatureCanvas = document.getElementById('temperatureChart');
+    const conductivityCanvas= document.getElementById('conductivityChart');
+
+    /**************************************************
+     * 3) Chart.js Setup
+     **************************************************/
+    // We'll keep local arrays of data for each chart, so we can see changes over time
+    let moistureData = [];
+    let moistureLabels = [];
+
+    let tempData = [];
+    let tempLabels = [];
+
+    let condData = [];
+    let condLabels = [];
+
+    // Helper: create a Chart.js line chart
+    function createLineChart(canvasElem, chartLabel, borderColor) {
+      return new Chart(canvasElem, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: chartLabel,
+            data: [],
+            borderColor: borderColor,
+            backgroundColor: 'rgba(0,0,0,0)',
+            tension: 0.1
+          }]
+        },
+        options: {
+          scales: {
+            x: {
+              type: 'time',
+              time: {
+                unit: 'minute',
+                displayFormats: {
+                  minute: 'HH:mm'
+                }
+              },
+              ticks: { color: '#E5FCE7' }
+            },
+            y: {
+              beginAtZero: false,
+              ticks: { color: '#E5FCE7' }
+            }
+          },
+          plugins: {
+            legend: {
+              labels: { color: '#E5FCE7' }
+            }
+          }
+        }
+      });
+    }
+
+    const moistureChart = createLineChart(moistureCanvas, "Moisture", "lime");
+    const tempChart     = createLineChart(temperatureCanvas, "Temperature (°C)", "orange");
+    const condChart     = createLineChart(conductivityCanvas, "Conductivity", "cyan");
+
+    /**************************************************
+     * 4) Load Current Settings from the doc
+     **************************************************/
+    async function loadCurrentSettings() {
+      try {
+        const snap = await getDoc(planterDocRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          
+          // direct numeric/string fields:
+          if (data.desiredMoisture !== undefined) {
+            desiredMoistureInput.value = data.desiredMoisture;
+          }
+          if (data.ledMode !== undefined) {
+            ledModeSelect.value = data.ledMode;
+          }
+          if (data.active !== undefined) {
+            activeSelect.value = data.active;
+          }
+        } else {
+          console.log("Document doesn't exist (planters/test_plant).");
+        }
+      } catch (err) {
+        console.error("Failed to load settings:", err);
+      }
+    }
+
+    /**************************************************
+     * 5) Update Settings in Firestore (one doc)
+     **************************************************/
+    async function updateSettings() {
+      try {
+        const moistureVal = parseInt(desiredMoistureInput.value) || 1500;
+        const ledVal      = ledModeSelect.value || "off";
+        const activeVal   = activeSelect.value  || "active";
+
+        // Store them as normal fields (number/string), not maps
+        const payload = {
+          desiredMoisture: moistureVal,
+          ledMode: ledVal,
+          active:  activeVal
+        };
+
+        await updateDoc(planterDocRef, payload);
+        alert("Settings updated!");
+      } catch (err) {
+        console.error("Failed to update settings:", err);
+        alert("Failed to update settings.");
+      }
+    }
+
+    /**************************************************
+     * 6) Real-time Listener for the Single Document
+     **************************************************/
+    // Each time the doc changes, we update "Current Data"
+    // and add a new point to the local chart arrays.
+    function listenForDocChanges() {
+      onSnapshot(planterDocRef, (docSnap) => {
+        if (!docSnap.exists()) {
+          console.log("Doc does not exist. Nothing to track.");
+          return;
+        }
+        const data = docSnap.data();
+
+        // Expect top-level numeric fields: moisture, temperature, conductivity
+        // e.g. moisture: 123.45
+        let newMoisture = data.moisture !== undefined ? data.moisture : 0;
+        let newTemp     = data.temperature !== undefined ? data.temperature : 0;
+        let newCond     = data.conductivity !== undefined ? data.conductivity : 0;
+
+        // If there's a Firestore Timestamp named "timestamp", use it; else use "now"
+        let newTimestamp = data.timestamp instanceof Object 
+                            && data.timestamp.toDate 
+                            ? data.timestamp.toDate() 
+                            : new Date();
+
+        // Update the "Current Data" panel
+        currentMoistureEl.textContent = newMoisture;
+        currentTempEl.textContent     = newTemp;
+        currentCondEl.textContent     = newCond;
+
+        // Add a new data point to each chart's arrays
+        moistureLabels.push(newTimestamp);
+        moistureData.push(newMoisture);
+
+        tempLabels.push(newTimestamp);
+        tempData.push(newTemp);
+
+        condLabels.push(newTimestamp);
+        condData.push(newCond);
+
+        // If you want to limit how many points you keep in memory, do something like:
+        // if (moistureData.length > 50) {
+        //   moistureData.shift();
+        //   moistureLabels.shift();
+        // }
+
+        // Update each chart
+        moistureChart.data.labels = moistureLabels;
+        moistureChart.data.datasets[0].data = moistureData;
+        moistureChart.update();
+
+        tempChart.data.labels = tempLabels;
+        tempChart.data.datasets[0].data = tempData;
+        tempChart.update();
+
+        condChart.data.labels = condLabels;
+        condChart.data.datasets[0].data = condData;
+        condChart.update();
+      }, (error) => {
+        console.error("onSnapshot error:", error);
+      });
+    }
+
+    /**************************************************
+     * 7) Event Listeners
+     **************************************************/
+    updateSettingsBtn.addEventListener('click', updateSettings);
+
+    /**************************************************
+     * 8) On Page Load
+     **************************************************/
+    loadCurrentSettings();     
+    listenForDocChanges();   // real-time doc changes
+  </script>
+</body>
+</html>

@@ -1,3 +1,22 @@
+// Import Firebase modules
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js';
+import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js';
+
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "REMOVED_FOR_CHAT",
+    authDomain: "project-katara.firebaseapp.com",
+    databaseURL: "REMOVED_FOR_CHAT",
+    projectId: "project-katara",
+    storageBucket: "project-katara.firebasestorage.app",
+    messagingSenderId: "7288655338",
+    appId: "REMOVED_FOR_CHAT",
+    measurementId: "G-J465YLGVQ9"
+};
+
+// Initialize Firebase and Database
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
 
 document.addEventListener('DOMContentLoaded', () => {
         // Image Upload and Handling
@@ -19,38 +38,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 let plants = JSON.parse(localStorage.getItem('plants')) || [];
         
                 // Function to render the plant grid
-                // Function to render the plant grid
                 function renderPlantGrid() {
                     plantGrid.innerHTML = '';
                     for (let i = 0; i < 4; i++) {
                         if (plants[i]) {
-                            // Active plant square
                             const plantSquare = document.createElement('div');
                             plantSquare.classList.add('plant-square', 'active');
                             plantSquare.setAttribute('data-id', plants[i].id);
-
+                
                             const img = document.createElement('img');
-                            
+                
                             // Determine the image to display
                             if (plants[i].image) {
                                 img.src = plants[i].image; // Custom image if provided
                             } else {
                                 const plantType = plants[i].type.toLowerCase().replace(/\s+/g, '_');
                                 const growthStage = plants[i].growthStage ? plants[i].growthStage.toLowerCase() : 'sprout';
-                                img.src = `assets/grow_stages/${plantType}_${growthStage}.png`; // Fallback to growth stage image
+                                img.src = `assets/grow_stages/${plantType}_${growthStage}.png`;
                             }
-
+                
                             img.alt = 'Plant Image';
-
+                
                             const plantName = document.createElement('p');
                             plantName.classList.add('plant-name');
                             plantName.textContent = plants[i].name;
-
+                
                             plantSquare.appendChild(img);
                             plantSquare.appendChild(plantName);
                             plantGrid.appendChild(plantSquare);
                         } else {
-                            // Inactive plant square
                             const plantSquare = document.createElement('div');
                             plantSquare.classList.add('plant-square', 'inactive');
                             plantSquare.innerHTML = '<div class="plus-icon">+</div>';
@@ -58,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 }
+                
 
         
                 // Initial render
@@ -238,6 +255,72 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('plants', JSON.stringify(plants));
             updatePlantImage();
         });
+
+
+                // Function to fetch data from Firebase
+        // Function to fetch data from Firebase
+        function fetchPlantData() {
+            const plantRef = ref(database, "/");
+
+            onValue(plantRef, (snapshot) => {
+                const data = snapshot.val();
+
+                if (data) {
+                    Object.keys(data).forEach((plantKey, index) => {
+                        const plantData = data[plantKey];
+                        const chartIdPrefix = `plant_${index + 1}`;
+
+                        // Dynamically update graphs for each plant
+                        updateGraph(`${chartIdPrefix}_moistureChart`, "Moisture (%)", plantData.moisture, 'rgba(54, 162, 235, 1)');
+                        updateGraph(`${chartIdPrefix}_temperatureChart`, "Temperature (°C)", plantData.temperature, 'rgba(255, 99, 132, 1)');
+                        updateGraph(`${chartIdPrefix}_conductivityChart`, "Electrical Conductivity (µS/cm)", plantData.electrical_conductivity, 'rgba(255, 206, 86, 1)');
+                    });
+                }
+            });
+        }
+
+
+        // Function to update the graphs
+        function updateGraph(chartId, label, value, color) {
+            const ctx = document.getElementById(chartId).getContext('2d');
+            const chart = Chart.getChart(ctx); // Check if chart already exists
+        
+            if (chart) {
+                chart.data.datasets[0].data.push(value);
+                chart.data.datasets[0].data.shift(); // Keep only 24 data points
+                chart.update();
+            } else {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: Array(24).fill("").map((_, i) => `${24 - i}h`),
+                        datasets: [{
+                            label: label,
+                            data: Array(24).fill(value),
+                            backgroundColor: color.replace('1)', '0.2)'),
+                            borderColor: color,
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            tooltip: { enabled: true }
+                        },
+                        scales: {
+                            x: { title: { display: true, text: "Hours Ago" } },
+                            y: { beginAtZero: true, title: { display: true, text: label } }
+                        }
+                    }
+                });
+            }
+        }
+        
+
+        // Call fetchPlantData to load data
+        fetchPlantData();
 
         // Resize image
         function resizeImage(imageBase64, maxWidth, maxHeight, callback) {
